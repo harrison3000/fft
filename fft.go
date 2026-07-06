@@ -104,6 +104,18 @@ func InvCompute(x []complex64) error {
 	return nil
 }
 
+var sqrt64cache [64]complex64
+var sqrt128cache [64]complex128
+
+func init() {
+	w := complex(0, -1)
+	for n := range 64 {
+		w = cmplx.Sqrt(w)
+		sqrt128cache[n] = w
+		sqrt64cache[n] = complex64(w)
+	}
+}
+
 // fft does the actual work for FFT
 func fft(x []complex128) {
 	N := len(x)
@@ -128,9 +140,10 @@ func fft(x []complex128) {
 		x[i], x[i+1], x[i+2], x[i+3] = x[i]+x[i+1]+x[i+2]+x[i+3], x[i]-x[i+1]+f, x[i]-x[i+2]+x[i+1]-x[i+3], x[i]-x[i+1]-f
 	}
 	// Remaining steps
-	w := complex(0, -1)
+	sn := 0
 	for n := 4; n < N; n <<= 1 {
-		w = cmplx.Sqrt(w)
+		w := sqrt128cache[sn]
+		sn++
 		for o := 0; o < N; o += (n << 1) {
 			wj := complex(1, 0)
 			for k := 0; k < n; k++ {
@@ -239,9 +252,10 @@ func fft64(x []complex64) {
 		x[i], x[i+1], x[i+2], x[i+3] = x[i]+x[i+1]+x[i+2]+x[i+3], x[i]-x[i+1]+f, x[i]-x[i+2]+x[i+1]-x[i+3], x[i]-x[i+1]-f
 	}
 	// Remaining steps
-	w := complex(float32(0), float32(-1))
+	sn := 0
 	for n := 4; n < N; n <<= 1 {
-		w = complex64(cmplx.Sqrt(complex128(w)))
+		w := sqrt64cache[sn]
+		sn++
 		for o := 0; o < N; o += (n << 1) {
 			wj := complex(float32(1), float32(0))
 			for k := 0; k < n; k++ {
