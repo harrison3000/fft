@@ -260,9 +260,9 @@ func fft64(x []complex64) {
 			wj := complex(float32(1), float32(0))
 			for k := 0; k < n; k++ {
 				i := k + o
-				f := wj * x[i+n]
+				f := cplxMult(wj, x[i+n])
 				x[i], x[i+n] = x[i]+f, x[i]-f
-				wj *= w
+				wj = cplxMult(wj, w)
 			}
 		}
 	}
@@ -300,4 +300,16 @@ func permute64(x []complex64) {
 			x[i+1], x[ind] = x[ind], x[i+1]
 		}
 	}
+}
+
+func cplxMult(x, y complex64) complex64 {
+	//why? because the go compiler promotes complex64 multiplications to complex128 internally
+	//FIXME consider removing this
+	a, b := real(x), imag(x)
+	c, d := real(y), imag(y)
+
+	xx := a*c - b*d
+	yy := a*d + b*c
+
+	return complex(xx, yy)
 }
