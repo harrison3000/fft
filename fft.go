@@ -302,9 +302,10 @@ func permute64(x []complex64) {
 	}
 }
 
+// cplxMult multiplies 2 complex64 values
+// why reimplement it manually? because the go compiler promotes complex64 multiplications to complex128 internally
+// doing it manually gives like a 50% speedup
 func cplxMult(x, y complex64) complex64 {
-	//why? because the go compiler promotes complex64 multiplications to complex128 internally
-	//FIXME consider removing this
 	a, b := real(x), imag(x)
 	c, d := real(y), imag(y)
 
