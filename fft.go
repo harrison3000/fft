@@ -216,10 +216,8 @@ func permute[T any](x []T) {
 		ind := int(bits.Reverse64(uint64(i)) >> shift)
 		// Skip cases where low bit isn't set while high bit is
 		// This eliminates 25% of iterations
-		if i < N2 {
-			if ind > i {
-				x[i], x[ind] = x[ind], x[i]
-			}
+		if i < N2 && ind > i {
+			x[i], x[ind] = x[ind], x[i]
 		}
 		ind |= N2 // Fast way to get int(bits.Reverse64(uint64(i+1)) >> shift) here
 		if ind > i+1 {
