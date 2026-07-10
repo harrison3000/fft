@@ -104,8 +104,8 @@ func InvCompute(x []complex64) error {
 	return nil
 }
 
-var sqrt64cache [64]complex64
-var sqrt128cache [64]complex128
+var sqrt64cache [256]complex64
+var sqrt128cache [256]complex128
 
 func init() {
 	w := complex(0, -1)
@@ -142,7 +142,7 @@ func fft(x []complex128) {
 	// Remaining steps
 	sn := 0
 	for n := 4; n < N; n <<= 1 {
-		w := sqrt128cache[sn]
+		w := sqrt128cache[uint8(sn)]
 		sn++
 		for o := 0; o < N; o += (n << 1) {
 			wj := complex(1, 0)
@@ -254,7 +254,7 @@ func fft64(x []complex64) {
 	// Remaining steps
 	sn := 0
 	for n := 4; n < N; n <<= 1 {
-		w := sqrt64cache[sn]
+		w := sqrt64cache[uint8(sn)]
 		sn++
 		for o := 0; o < N; o += (n << 1) {
 			wj := complex(float32(1), float32(0))
