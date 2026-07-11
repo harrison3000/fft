@@ -1,20 +1,42 @@
 package fft
 
-func Compute2D(input [][]float32, scratch []complex64) ([][]complex64, error) {
-	N := len(input)
-	Nsq := N * N
+type RealFFT2D struct {
+	n         int
+	scratch   []complex64
+	workspace [][]complex64
+}
+
+func (f *RealFFT2D) Init(N int) error {
 	if e := checkLength("FFT 2D dimension", N); e != nil {
+		return e
+	}
+	Nsq := N * N
+	if len(f.scratch) < Nsq {
+		f.scratch = make([]complex64, Nsq)
+		f.workspace = subdivideslice(f.scratch, N)
+	}
+	f.n = N
+
+	return nil
+}
+
+func ComputeReal2D(input [][]float32) ([][]complex64, error) {
+	var s RealFFT2D
+	if e := s.Init(len(input)); e != nil {
 		return nil, e
 	}
+	c := s.Compute(input).FastResult() //usar fullresult
+	return c, nil
+}
 
-	if len(scratch) < Nsq {
-		scratch = make([]complex64, Nsq)
+func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
+	N := len(input)
+	if f.n != N {
+		panic("bad usage")
 	}
 
-	wrkspc := subdivideslice(scratch, N)
-
 	for y := range N {
-		s := wrkspc[y]
+		s := f.workspace[y]
 		is := input[y]
 		for x := range N {
 			//TODO possible optimization: do the shuffling here
@@ -24,15 +46,20 @@ func Compute2D(input [][]float32, scratch []complex64) ([][]complex64, error) {
 	}
 
 	//TODO possible optimization: do the shuffling here, per line
-	transpose(wrkspc, N)
+	transpose(f.workspace, N)
 	N2p1 := N/2 + 1
 
 	for y := range N2p1 {
-		s := wrkspc[y]
+		s := f.workspace[y]
 		Compute(s)
 	}
 
-	return wrkspc[:N2p1], nil
+	return f
+}
+
+func (f *RealFFT2D) FastResult() [][]complex64 {
+	N2p1 := f.n/2 + 1
+	return f.workspace[:N2p1]
 }
 
 func subdivideslice[T any](scratch []T, N int) [][]T {

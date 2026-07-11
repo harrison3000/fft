@@ -9,13 +9,11 @@ import (
 )
 
 func TestFFT2D(t *testing.T) {
-	in := mk2dTestData[float32]()
-	in64 := mk2dTestData[float64]()
-
-	s := make([]complex64, 16)
+	in := mk2dTestData[float32](8)
+	in64 := mk2dTestData[float64](8)
 
 	resdsp := dspfft.FFT2Real(in64) //we just trust go-dsp did its homework, lol
-	res, e := Compute2D(in, s)
+	res, e := ComputeReal2D(in)
 	if e != nil {
 		t.Errorf("Well, it should have worked, but didnt (%v)", e)
 	}
@@ -34,8 +32,8 @@ func TestFFT2D(t *testing.T) {
 	}
 }
 
-func mk2dTestData[T float32 | float64]() [][]T {
-	in := subdivideslice(make([]T, 256), 8)
+func mk2dTestData[T float32 | float64](N int) [][]T {
+	in := subdivideslice(make([]T, N*N), N)
 	in[0][0] = 0.5
 	in[0][1] = 0.5
 	in[1][0] = 0.5
@@ -66,4 +64,23 @@ func TestTranspose(t *testing.T) {
 	}
 }
 
-//TODO benchmarks
+func Benchmark2DFFT(b *testing.B) {
+	var s RealFFT2D
+	s.Init(8)
+	d := mk2dTestData[float32](8)
+
+	b.Run("Small", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			s.Compute(d)
+		}
+	})
+
+	s.Init(512)
+	d = mk2dTestData[float32](512)
+	b.Run("Big", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			s.Compute(d)
+		}
+	})
+
+}
