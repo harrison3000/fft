@@ -9,8 +9,9 @@ import (
 )
 
 func TestFFT2D(t *testing.T) {
-	in := mk2dTestData[float32](8)
-	in64 := mk2dTestData[float64](8)
+	len := 16
+	in := mk2dTestData[float32](len)
+	in64 := mk2dTestData[float64](len)
 
 	resdsp := dspfft.FFT2Real(in64) //we just trust go-dsp did its homework, lol
 	res, e := ComputeReal2D(in)
@@ -18,8 +19,8 @@ func TestFFT2D(t *testing.T) {
 		t.Errorf("Well, it should have worked, but didnt (%v)", e)
 	}
 
-	for x := range 8 {
-		for y := range 5 {
+	for x := range len {
+		for y := range len/2 + 1 {
 			ours := complex128(res[y][x])
 			theirs := resdsp[x][y]
 
@@ -64,7 +65,7 @@ func TestTranspose(t *testing.T) {
 	}
 }
 
-func Benchmark2DFFT(b *testing.B) {
+func BenchmarkReal2DFFT(b *testing.B) {
 	var s RealFFT2D
 	s.Init(8)
 	d := mk2dTestData[float32](8)

@@ -25,7 +25,7 @@ func ComputeReal2D(input [][]float32) ([][]complex64, error) {
 	if e := s.Init(len(input)); e != nil {
 		return nil, e
 	}
-	c := s.Compute(input).FastResult() //usar fullresult
+	c := s.Compute(input).Result()
 	return c, nil
 }
 
@@ -57,7 +57,10 @@ func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
 	return f
 }
 
-func (f *RealFFT2D) FastResult() [][]complex64 {
+// Result returns... well.... the result!
+// it doesn't include de symetric redundant data, having only N/2 + 1 rows
+// so if the input is for example 64x64 the result will be 33x64
+func (f *RealFFT2D) Result() [][]complex64 {
 	N2p1 := f.n/2 + 1
 	return f.workspace[:N2p1]
 }
