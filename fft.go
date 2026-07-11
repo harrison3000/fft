@@ -41,7 +41,7 @@ func Compute(x []complex64) error {
 		return err
 	}
 
-	fft64(x)
+	fft64(x, true)
 	return nil
 }
 
@@ -185,7 +185,7 @@ func ifft64(x []complex64) {
 	}
 
 	// Do the transform.
-	fft64(x)
+	fft64(x, true)
 
 	// Scale the output by 1/N
 	invN := complex(1.0/float32(N), 0)
@@ -227,7 +227,7 @@ func permute[T any](x []T) {
 }
 
 // fft does the actual work for FFT
-func fft64(x []complex64) {
+func fft64(x []complex64, perm bool) {
 	N := len(x)
 	// Handle small N quickly
 	switch N {
@@ -241,8 +241,10 @@ func fft64(x []complex64) {
 		x[0], x[1], x[2], x[3] = x[0]+x[1]+x[2]+x[3], x[0]-x[2]+f, x[0]-x[1]+x[2]-x[3], x[0]-x[2]-f
 		return
 	}
-	// Reorder the input array.
-	permute(x)
+	if perm {
+		// Reorder the input array.
+		permute(x)
+	}
 	// Butterfly
 	// First 2 steps
 	for i := 0; i < N; i += 4 {

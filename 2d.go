@@ -4,6 +4,7 @@ type RealFFT2D struct {
 	n         int
 	scratch   []complex64
 	workspace [][]complex64
+	perms     []int
 }
 
 func (f *RealFFT2D) Init(N int) error {
@@ -14,6 +15,11 @@ func (f *RealFFT2D) Init(N int) error {
 	if len(f.scratch) < Nsq {
 		f.scratch = make([]complex64, Nsq)
 		f.workspace = subdivideslice(f.scratch, N)
+		f.perms = make([]int, N)
+		for i := range N {
+			f.perms[i] = i
+		}
+		permute(f.perms)
 	}
 	f.n = N
 
@@ -39,19 +45,19 @@ func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
 		s := f.workspace[y]
 		is := input[y]
 		for x := range N {
-			//TODO possible optimization: do the shuffling here
-			s[x] = complex(is[x], 0)
+			sp := f.perms[x]
+			s[sp] = complex(is[x], 0)
 		}
-		Compute(s) //no need to check the error, already made the right size
+		fft64(s, false)
 	}
 
-	//TODO possible optimization: do the shuffling here, per line
+	permute(f.workspace)
 	transpose(f.workspace, N)
 	N2p1 := N/2 + 1
 
 	for y := range N2p1 {
 		s := f.workspace[y]
-		Compute(s)
+		fft64(s, false)
 	}
 
 	return f
