@@ -8,7 +8,7 @@ import (
 	dspfft "github.com/mjibson/go-dsp/fft"
 )
 
-func TestFFT2D(t *testing.T) {
+func TestReal2DFFT(t *testing.T) {
 	len := 16
 	in := mk2dTestData[float32](len)
 	in64 := mk2dTestData[float64](len)
