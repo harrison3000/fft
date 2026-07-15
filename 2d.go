@@ -79,11 +79,27 @@ func subdivideslice[T any](scratch []T, N int) [][]T {
 }
 
 func transpose[T any](s [][]T, N int) {
-
-	for y := range N {
-		for x := range N {
-			if y < x {
-				s[x][y], s[y][x] = s[y][x], s[x][y]
+	if N <= 16 {
+		for r := range N {
+			for c := range N {
+				if r < c {
+					s[c][r], s[r][c] = s[r][c], s[c][r]
+				}
+			}
+		}
+		return
+	}
+	n8 := N / 8
+	for br := range n8 {
+		for bc := range n8 {
+			for rr := range 8 {
+				r := br*8 + rr
+				for cc := range 8 {
+					c := bc*8 + cc
+					if r < c {
+						s[c][r], s[r][c] = s[r][c], s[c][r]
+					}
+				}
 			}
 		}
 	}
