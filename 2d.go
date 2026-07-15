@@ -40,9 +40,9 @@ func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
 		panic("bad usage")
 	}
 
-	for y := range N {
-		s := f.workspace[y]
-		is := input[y]
+	for r := range N {
+		s := f.workspace[r]
+		is := input[r]
 		for x := range N {
 			sp := f.perms[x]
 			s[sp] = complex(is[x], 0)
@@ -54,8 +54,8 @@ func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
 	transpose(f.workspace, N)
 	N2p1 := N/2 + 1
 
-	for y := range N2p1 {
-		s := f.workspace[y]
+	for r := range N2p1 {
+		s := f.workspace[r]
 		fft64(s, false)
 	}
 
