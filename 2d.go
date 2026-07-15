@@ -12,16 +12,15 @@ func (f *RealFFT2D) Init(N int) error {
 		return e
 	}
 	Nsq := N * N
-	if len(f.scratch) < Nsq {
-		f.scratch = make([]complex64, Nsq)
-		f.workspace = subdivideslice(f.scratch, N)
-		f.perms = make([]int, N)
-		for i := range N {
-			f.perms[i] = i
-		}
-		permute(f.perms)
-	}
+
 	f.n = N
+	f.scratch = make([]complex64, Nsq)
+	f.workspace = subdivideslice(f.scratch, N)
+	f.perms = make([]int, N)
+	for i := range N {
+		f.perms[i] = i
+	}
+	permute(f.perms)
 
 	return nil
 }
@@ -80,6 +79,7 @@ func subdivideslice[T any](scratch []T, N int) [][]T {
 }
 
 func transpose[T any](s [][]T, N int) {
+
 	for y := range N {
 		for x := range N {
 			if y < x {
