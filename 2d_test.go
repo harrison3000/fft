@@ -27,7 +27,7 @@ func TestReal2DFFT(t *testing.T) {
 			abs := cmplx.Abs(ours - theirs)
 
 			if abs > 0.0001 {
-				t.Error("Too much difference")
+				t.Fatal("Too much difference")
 			}
 		}
 	}
@@ -94,6 +94,30 @@ func BenchmarkReal2DFFT(b *testing.B) {
 	b.Run("Big", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			s.Compute(d)
+		}
+	})
+
+}
+
+func Benchmark2DTranspose(b *testing.B) {
+	d := mk2dTestData[float32](32)
+
+	b.Run("Small", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			transpose(d)
+		}
+	})
+
+	d = mk2dTestData[float32](2048)
+	b.Run("Big", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			transpose(d)
+		}
+	})
+
+	b.Run("Big Naive", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			naiveTranspose(d)
 		}
 	})
 
