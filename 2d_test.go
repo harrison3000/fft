@@ -56,12 +56,25 @@ func TestTranspose(t *testing.T) {
 		{13, 14, 15, 16},
 	}
 
-	transpose(a, 4)
+	naiveTranspose(a)
 
 	al := fmt.Sprint(a)
 
 	if al != "[[1 5 9 13] [2 6 10 14] [3 7 11 15] [4 8 12 16]]" {
-		t.Errorf("unexpected results: %v", al)
+		t.Errorf("unexpected results for small transpose: %v", al)
+	}
+
+	bigOne := ([256 * 256]float64)(floatRand(256 * 256))
+	bigTwo := bigOne
+
+	testa := subdivideslice(bigOne[:], 256)
+	naiveTranspose(testa)
+
+	testb := subdivideslice(bigTwo[:], 256)
+	transpose(testb)
+
+	if bigOne != bigTwo {
+		t.Errorf("naive and optimized transpose gave different results!")
 	}
 }
 

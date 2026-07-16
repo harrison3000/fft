@@ -51,7 +51,12 @@ func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
 	}
 
 	permute(f.workspace)
-	transpose(f.workspace, N)
+	if N <= 8 {
+		naiveTranspose(f.workspace)
+	} else {
+		transpose(f.workspace)
+	}
+
 	N2p1 := N/2 + 1
 
 	for r := range N2p1 {
@@ -78,24 +83,29 @@ func subdivideslice[T any](scratch []T, N int) [][]T {
 	return r
 }
 
-func transpose[T any](s [][]T, N int) {
-	if N <= 16 {
-		for r := range N {
-			for c := range N {
-				if r < c {
-					s[c][r], s[r][c] = s[r][c], s[c][r]
-				}
+func naiveTranspose[T any](s [][]T) {
+	N := len(s)
+	for r := range N {
+		for c := range N {
+			if r < c {
+				s[c][r], s[r][c] = s[r][c], s[c][r]
 			}
 		}
-		return
 	}
-	n8 := N / 8
-	for br := range n8 {
-		for bc := range n8 {
+}
+
+func transpose[T any](s [][]T) {
+	N := len(s)
+
+	for br := 0; br < N; br += 8 {
+		for bc := 0; bc < N; bc += 8 {
+			if bc < br {
+				continue
+			}
 			for rr := range 8 {
-				r := br*8 + rr
+				r := br + rr
 				for cc := range 8 {
-					c := bc*8 + cc
+					c := bc + cc
 					if r < c {
 						s[c][r], s[r][c] = s[r][c], s[c][r]
 					}
