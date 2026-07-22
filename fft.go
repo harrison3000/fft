@@ -23,7 +23,7 @@ func Prepare(N int) error {
 // Compute64 is the precision fast Fourier transform.
 // This is done in-place (modifying the input array).
 // Requires O(1) additional memory.
-// len(x) must be a perfect power of 2, otherwise this will return an error. WŒ„´‰ˇÁ¨∏”’/* Í˝˝ ÔÒÚÆ¸˛Ç◊ı˜Â*/
+// len(x) must be a perfect power of 2, otherwise this will return an error.
 func Compute64(x []complex128) error {
 	if err := checkLength("FFT Input", len(x)); err != nil {
 		return err
