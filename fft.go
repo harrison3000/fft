@@ -196,7 +196,7 @@ func ifft64(x []complex64) {
 
 // permutate permutes the input vector using bit reversal.
 // Uses an in-place algorithm that runs in O(N) time and O(1) additional space.
-func permute(x []complex128) {
+func permute[T any](x []T) {
 	N := len(x)
 	// Handle small N quickly
 	switch N {
@@ -216,10 +216,8 @@ func permute(x []complex128) {
 		ind := int(bits.Reverse64(uint64(i)) >> shift)
 		// Skip cases where low bit isn't set while high bit is
 		// This eliminates 25% of iterations
-		if i < N2 {
-			if ind > i {
-				x[i], x[ind] = x[ind], x[i]
-			}
+		if i < N2 && ind > i {
+			x[i], x[ind] = x[ind], x[i]
 		}
 		ind |= N2 // Fast way to get int(bits.Reverse64(uint64(i+1)) >> shift) here
 		if ind > i+1 {
@@ -244,7 +242,7 @@ func fft64(x []complex64) {
 		return
 	}
 	// Reorder the input array.
-	permute64(x)
+	permute(x)
 	// Butterfly
 	// First 2 steps
 	for i := 0; i < N; i += 4 {
@@ -264,40 +262,6 @@ func fft64(x []complex64) {
 				x[i], x[i+n] = x[i]+f, x[i]-f
 				wj = cplxMult(wj, w)
 			}
-		}
-	}
-}
-
-// permutate permutes the input vector using bit reversal.
-// Uses an in-place algorithm that runs in O(N) time and O(1) additional space.
-func permute64(x []complex64) {
-	N := len(x)
-	// Handle small N quickly
-	switch N {
-	case 1, 2:
-		return
-	case 4:
-		x[1], x[2] = x[2], x[1]
-		return
-	case 8:
-		x[1], x[4] = x[4], x[1]
-		x[3], x[6] = x[6], x[3]
-		return
-	}
-	shift := 64 - uint64(bits.Len64(uint64(N-1)))
-	N2 := N >> 1
-	for i := 0; i < N; i += 2 {
-		ind := int(bits.Reverse64(uint64(i)) >> shift)
-		// Skip cases where low bit isn't set while high bit is
-		// This eliminates 25% of iterations
-		if i < N2 {
-			if ind > i {
-				x[i], x[ind] = x[ind], x[i]
-			}
-		}
-		ind |= N2 // Fast way to get int(bits.Reverse64(uint64(i+1)) >> shift) here
-		if ind > i+1 {
-			x[i+1], x[ind] = x[ind], x[i+1]
 		}
 	}
 }

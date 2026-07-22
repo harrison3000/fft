@@ -156,19 +156,21 @@ func TestIFFT(t *testing.T) {
 }
 
 func TestPermute(t *testing.T) {
-	shift := uint64(64)
-	for n := 1; n < (1 << 11); n <<= 1 {
-		x := complexRand(n)
-		y := make([]complex128, n)
-		copy(y, x)
+	for k := range 12 {
+		n := 1 << k
+		shift := 64 - k
+		x := make([]int, n)
+		for i := range x {
+			x[i] = i
+		}
+
 		permute(x)
-		for i := 0; i < n; i++ {
+		for i := range x {
 			ind := int(bits.Reverse64(uint64(i)) >> shift)
-			if x[i] != y[ind] {
-				t.Errorf("%d expected: x[%d] = %v, got: %v\n", n, i, y[ind], x[i])
+			if x[i] != ind {
+				t.Errorf("%d expected: x[%d] = %v, got: %v\n", n, i, ind, x[i])
 			}
 		}
-		shift--
 	}
 }
 
