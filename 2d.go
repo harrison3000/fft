@@ -1,0 +1,109 @@
+package fft
+
+type RealFFT2D struct {
+	n         int
+	scratch   []complex64
+	workspace [][]complex64
+}
+
+func (f *RealFFT2D) Init(N int) error {
+	if e := checkLength("FFT 2D dimension", N); e != nil {
+		return e
+	}
+	Nsq := N * N
+
+	f.n = N
+	f.scratch = make([]complex64, Nsq)
+	f.workspace = subdivideslice(f.scratch, N)
+
+	return nil
+}
+
+func ComputeReal2D(input [][]float32) ([][]complex64, error) {
+	var s RealFFT2D
+	if e := s.Init(len(input)); e != nil {
+		return nil, e
+	}
+	c := s.Compute(input).Result()
+	return c, nil
+}
+
+func (f *RealFFT2D) Compute(input [][]float32) *RealFFT2D {
+	N := len(input)
+	if f.n != N {
+		panic("bad usage")
+	}
+
+	for r := range N {
+		s := f.workspace[r]
+		is := input[r]
+		for x := range N {
+			s[x] = complex(is[x], 0)
+		}
+		fft64(s)
+	}
+
+	//permute(f.workspace)
+	if N <= 8 {
+		naiveTranspose(f.workspace)
+	} else {
+		transpose(f.workspace)
+	}
+
+	N2p1 := N/2 + 1
+
+	for r := range N2p1 {
+		s := f.workspace[r]
+		fft64(s)
+	}
+
+	return f
+}
+
+// Result returns... well.... the result!
+// it doesn't include de symetric redundant data, having only N/2 + 1 rows
+// so if the input is for example 64x64 the result will be 33x64
+func (f *RealFFT2D) Result() [][]complex64 {
+	N2p1 := f.n/2 + 1
+	return f.workspace[:N2p1]
+}
+
+func subdivideslice[T any](scratch []T, N int) [][]T {
+	r := make([][]T, 0, N)
+	for i := 0; i < N*N; i += N {
+		r = append(r, scratch[i:i+N])
+	}
+	return r
+}
+
+func naiveTranspose[T any](s [][]T) {
+	N := len(s)
+	for r := range N {
+		for c := range N {
+			if r < c {
+				s[c][r], s[r][c] = s[r][c], s[c][r]
+			}
+		}
+	}
+}
+
+func transpose[T any](s [][]T) {
+	N := len(s)
+
+	for br := 0; br < N; br += 8 {
+		for bc := 0; bc < N; bc += 8 {
+			if bc < br {
+				continue
+			}
+			for rr := range 8 {
+				r := br + rr
+				for cc := range 8 {
+					c := bc + cc
+					if r < c {
+						s[c][r], s[r][c] = s[r][c], s[c][r]
+					}
+				}
+			}
+		}
+	}
+}
