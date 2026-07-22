@@ -51,6 +51,14 @@ func copyVector(v []complex128) []complex128 {
 	return y
 }
 
+func copyToCplx64(v []complex128) []complex64 {
+	y := make([]complex64, len(v))
+	for k, v := range v {
+		y[k] = complex64(v)
+	}
+	return y
+}
+
 func TestPrepare(t *testing.T) {
 	// Test Prepare of non-powers of 2 returns InputSizeError
 	checkIsInputSizeError(t, "Prepare(17)", Prepare(17))
@@ -79,6 +87,47 @@ func TestFFT(t *testing.T) {
 			if e := cmplx.Abs(y1[i] - y2[i]); e > 1e-9 {
 				t.Errorf("slowFFT and FFT differ: i=%d N=%d y1[%d]=%v y2[%d]=%v diff=%v\n", i, N, i, y1[i], i, y2[i], e)
 			}
+		}
+	}
+}
+
+func TestFFTFloat32(t *testing.T) {
+	nl := []struct {
+		size   int
+		elimit float64
+	}{
+		{1, 1e-6},
+		{2, 1e-6},
+		{4, 1e-6},
+		{8, 1e-5},
+		{128, 1e-4},
+		{1024, 1e-3},
+		{32768, 0.1},
+	}
+
+	for _, tt := range nl {
+		N := tt.size
+		xd := complexRand(N)
+		xs := copyToCplx64(xd)
+
+		Compute64(xd)
+		err := Compute(xs)
+		if err != nil {
+			t.Fatalf("FFT error: %v", err)
+		}
+
+		var ee, emin, emax float64
+		emin = 1e99
+		for i := range N {
+			vv := complex128(xs[i])
+			e := cmplx.Abs(vv - xd[i])
+			ee += e
+			emin = min(emin, e)
+			emax = max(emax, e)
+		}
+		ee /= float64(N)
+		if ee > tt.elimit {
+			t.Errorf("Compute and Compute64 differ: N=%d, avg_error=%v, min=%v, max%v (limit:%v)\n", N, ee, emin, emax, tt.elimit)
 		}
 	}
 }
@@ -230,6 +279,21 @@ func BenchmarkFFT(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				Compute64(x)
+			}
+		})
+	}
+}
+
+func BenchmarkFFTFloat32(b *testing.B) {
+	for _, bm := range benchmarks {
+		x128 := complexRand(bm.size)
+		x := copyToCplx64(x128)
+
+		b.Run(bm.name, func(b *testing.B) {
+			b.SetBytes(int64(bm.size * 16))
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				Compute(x)
 			}
 		})
 	}
